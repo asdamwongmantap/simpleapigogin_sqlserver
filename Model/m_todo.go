@@ -16,8 +16,9 @@ type (
 	// todoModel describes a todoModel type
 	TodoModel struct {
 		gorm.Model
-		Title     string `json:"title"`
-		Completed int    `json:"completed"`
+		Title string `json:"title"`
+		// Title     string `form:"title" binding:"required"`
+		Completed int `json:"completed"`
 	}
 
 	// transformedTodo represents a formatted todo
