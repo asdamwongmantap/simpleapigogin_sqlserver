@@ -13,22 +13,6 @@ import (
 
 var db *gorm.DB
 
-// type (
-// 	// todoModel describes a todoModel type
-// 	todoModel struct {
-// 		gorm.Model
-// 		Title     string `json:"title"`
-// 		Completed int    `json:"completed"`
-// 	}
-
-// 	// transformedTodo represents a formatted todo
-// 	transformedTodo struct {
-// 		ID        uint   `json:"id"`
-// 		Title     string `json:"title"`
-// 		Completed bool   `json:"completed"`
-// 	}
-// )
-
 func init() {
 	//open a db connection
 	var err error
@@ -38,7 +22,7 @@ func init() {
 	}
 
 	//Migrate the schema
-	// db.AutoMigrate(&todoModel{})
+	db.AutoMigrate(MTD.TodoModel{})
 }
 
 // fetchAllTodo fetch all todos
@@ -64,15 +48,18 @@ func FetchAllTodo(c *gin.Context) {
 		}
 		_todos = append(_todos, MTD.TransformedTodo{ID: item.ID, Title: item.Title, Completed: completed})
 	}
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _todos})
+	// c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _todos})
+	c.JSON(http.StatusOK, _todos)
 }
 
 // createTodo add a new todo
 func CreateTodo(c *gin.Context) {
 	completed, _ := strconv.Atoi(c.PostForm("completed"))
+	// var title := c.PostForm("title")
 	todo := MTD.TodoModel{Title: c.PostForm("title"), Completed: completed}
+	// db.Save(&todo)
 	db.Save(&todo)
-	c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "message": "Todo item created successfully!", "resourceId": todo.ID})
+	c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "message": "Todo item created successfully!", "resourceId": todo.ID, "fieldtitle": c.PostForm("title")})
 }
 
 // fetchSingleTodo fetch a single todo
@@ -102,6 +89,7 @@ func FetchSingleTodo(c *gin.Context) {
 func UpdateTodo(c *gin.Context) {
 	var todo MTD.TodoModel
 	todoID := c.Param("id")
+	// firstname := c.Param("firstname")
 
 	db.First(&todo, todoID)
 
@@ -110,10 +98,10 @@ func UpdateTodo(c *gin.Context) {
 		return
 	}
 
-	db.Model(&todo).Update("title", c.PostForm("title"))
+	db.Model(&todo).Update("title", c.PostForm("firstname"))
 	completed, _ := strconv.Atoi(c.PostForm("completed"))
 	db.Model(&todo).Update("completed", completed)
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo updated successfully!"})
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo updated successfully!", "tes": c.PostForm("title")})
 }
 
 // deleteTodo remove a todo

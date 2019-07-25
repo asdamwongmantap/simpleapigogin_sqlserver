@@ -1,28 +1,33 @@
 package main
 
 import (
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 
 	TD "simpleapigogin/Controllers"
+
+	"github.com/rs/cors"
 )
 
-var db *gorm.DB
-
-// func init() {
-// 	//open a db connection
-// 	var err error
-// 	db, err = gorm.Open("mysql", "root@/golang?charset=utf8&parseTime=True&loc=Local")
-// 	if err != nil {
-// 		panic("failed to connect database")
-// 	}
-
-// 	//Migrate the schema
-// 	// db.AutoMigrate(&todoModel{})
-// }
+func determineListenAddress() (string, error) {
+	port := os.Getenv("PORT")
+	if port == "" {
+		//return "", fmt.Errorf("$PORT not set")
+		port = "5001"
+	}
+	return ":" + port, nil
+}
 
 func main() {
+
+	addr, err := determineListenAddress()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	router := gin.Default()
 
@@ -34,22 +39,11 @@ func main() {
 		v1.PUT("/:id", TD.UpdateTodo)
 		v1.DELETE("/:id", TD.DeleteTodo)
 	}
-	router.Run(":5001")
+	c := cors.AllowAll()
+
+	handler := c.Handler(router)
+	// fmt.Printf(TD.FetchAllTodo())
+	// router.Run(":5001", handler)
+	log.Fatal(http.ListenAndServe(addr, handler))
 
 }
-
-// type (
-// 	// todoModel describes a todoModel type
-// 	todoModel struct {
-// 		gorm.Model
-// 		Title     string `json:"title"`
-// 		Completed int    `json:"completed"`
-// 	}
-
-// 	// transformedTodo represents a formatted todo
-// 	transformedTodo struct {
-// 		ID        uint   `json:"id"`
-// 		Title     string `json:"title"`
-// 		Completed bool   `json:"completed"`
-// 	}
-// )
