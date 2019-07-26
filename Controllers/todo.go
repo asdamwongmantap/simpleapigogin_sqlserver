@@ -22,7 +22,7 @@ func init() {
 	}
 
 	//Migrate the schema
-	db.AutoMigrate(MTD.TodoModel{})
+	// db.AutoMigrate(MTD.TodoModel{})
 }
 
 // fetchAllTodo fetch all todos
@@ -90,7 +90,7 @@ func FetchSingleTodo(c *gin.Context) {
 // updateTodo update a todo
 func UpdateTodo(c *gin.Context) {
 	var todo MTD.TodoModel
-	var titletdm MTD.TodoModel
+	// var titletdm MTD.TodoModel
 	todoID := c.Param("id")
 	// firstname := c.Param("firstname")
 
@@ -100,11 +100,11 @@ func UpdateTodo(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
 		return
 	}
-	c.BindJSON(&titletdm)
-	db.Model(&todo).Update("title", titletdm.Title)
+	c.BindJSON(&todo)
+	db.Model(&todo).Update("title", todo.Title)
 	completed, _ := strconv.Atoi(c.PostForm("completed"))
 	db.Model(&todo).Update("completed", completed)
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo updated successfully!", "tes": titletdm.Title})
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo updated successfully!", "tes": todo.Title})
 }
 
 // deleteTodo remove a todo
@@ -121,4 +121,42 @@ func DeleteTodo(c *gin.Context) {
 
 	db.Delete(&todo)
 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo deleted successfully!"})
+}
+
+// Login todo
+
+func LoginTodo(c *gin.Context) {
+	var todo MTD.TodoModel
+	var titletdm MTD.TodoModel
+	// todoID := c.Param("id")
+	// todotitle := c.Param("title")
+	c.BindJSON(&titletdm)
+	name := titletdm.Title
+	// name := c.PostForm("title")
+	// sqlStatement := `SELECT col FROM my_table WHERE id=$1`
+	// db.First(&todo, todotitle)
+	db.Where("title = ?", name).Find(&todo)
+
+	if titletdm.Title == todo.Title {
+		// if c.PostForm("title") == todo.Title {
+		// c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
+		c.JSON(http.StatusOK, gin.H{"statusaja": "sesuai"})
+		// c.JSON(http.StatusOK, todo.Title)
+		// c.Redirect("")
+		return
+	} else {
+		// c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!", "tes": todo})
+		c.JSON(http.StatusOK, gin.H{"statusaja": "tidak sesuai"})
+		return
+	}
+
+	// completed := false
+	// if todo.Completed == 1 {
+	// 	completed = true
+	// } else {
+	// 	completed = false
+	// }
+
+	// _todo := MTD.TransformedTodo{ID: todo.ID, Title: todo.Title}
+	// c.JSON(http.StatusOK, _todo)
 }
