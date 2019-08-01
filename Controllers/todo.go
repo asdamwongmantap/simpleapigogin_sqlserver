@@ -1,162 +1,197 @@
 package todo
 
 import (
+	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 
-	MTD "simpleapigogin/Model"
+	// "github.com/jinzhu/gorm"
+	MTD "simpleapigogin_sqlserver/Model"
+
+	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-var db *gorm.DB
+// var db *gorm.DB
+// var condb *sql.DB
 
-func init() {
-	//open a db connection
-	var err error
-	db, err = gorm.Open("mysql", "root@/golang?charset=utf8&parseTime=True&loc=Local")
+func connect() (*sql.DB, error) {
+	db, err := sql.Open("mssql", "server=172.16.1.186;user id=Appdev;password=1234;database=BAFLiteDB;")
 	if err != nil {
-		panic("failed to connect database")
+		return nil, err
 	}
 
-	//Migrate the schema
-	// db.AutoMigrate(MTD.TodoModel{})
+	return db, nil
 }
 
-// fetchAllTodo fetch all todos
-func FetchAllTodo(c *gin.Context) {
+// func init() {
+// 	//open a db connection
+// 	var err error
+// 	// db, err = gorm.Open("mysql", "root@/golang?charset=utf8&parseTime=True&loc=Local")
+// 	// if err != nil {
+// 	// 	panic("failed to connect database")
+// 	// }
+// 	condb, err := sql.Open("mssql", "server=172.16.1.186;user id=Appdev;password=1234;database=BAFLiteDB;")
+// 	if err != nil {
+// 		panic("failed to connect database")
+// 	}
+// 	fmt.Println(condb)
+// 	//Migrate the schema
+// 	// db.AutoMigrate(MTD.TodoModel{})
 
-	var todos []MTD.TodoModel
-	var _todos []MTD.TransformedTodo
+// }
 
-	db.Find(&todos)
+// // fetchAllTodo fetch all todos
+// func FetchAllTodo(c *gin.Context) {
 
-	if len(todos) <= 0 {
-		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
-		return
-	}
+// 	var todos []MTD.TodoModel
+// 	var _todos []MTD.TransformedTodo
 
-	//transforms the todos for building a good response
-	for _, item := range todos {
-		completed := false
-		if item.Completed == 1 {
-			completed = true
-		} else {
-			completed = false
-		}
-		_todos = append(_todos, MTD.TransformedTodo{ID: item.ID, Title: item.Title, Completed: completed})
-	}
-	// c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _todos})
-	c.JSON(http.StatusOK, _todos)
-}
+// 	db.Find(&todos)
 
-// createTodo add a new todo
-func CreateTodo(c *gin.Context) {
-	var titletdm MTD.TodoModel
-	completed, _ := strconv.Atoi(c.PostForm("completed"))
-	// var title := c.PostForm("title")
-	c.BindJSON(&titletdm)
-	todo := MTD.TodoModel{Title: titletdm.Title, Completed: completed}
-	// db.Save(&todo)
-	db.Save(&todo)
-	c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "message": "Todo item created successfully!", "resourceId": todo.ID, "fieldtitle": titletdm.Title})
-}
+// 	if len(todos) <= 0 {
+// 		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
+// 		return
+// 	}
 
-// fetchSingleTodo fetch a single todo
-func FetchSingleTodo(c *gin.Context) {
-	var todo MTD.TodoModel
-	todoID := c.Param("id")
+// 	//transforms the todos for building a good response
+// 	for _, item := range todos {
+// 		completed := false
+// 		if item.Completed == 1 {
+// 			completed = true
+// 		} else {
+// 			completed = false
+// 		}
+// 		_todos = append(_todos, MTD.TransformedTodo{ID: item.ID, Title: item.Title, Completed: completed})
+// 	}
+// 	// c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _todos})
+// 	c.JSON(http.StatusOK, _todos)
+// }
 
-	db.First(&todo, todoID)
+// // createTodo add a new todo
+// func CreateTodo(c *gin.Context) {
+// 	var titletdm MTD.TodoModel
+// 	completed, _ := strconv.Atoi(c.PostForm("completed"))
+// 	// var title := c.PostForm("title")
+// 	c.BindJSON(&titletdm)
+// 	todo := MTD.TodoModel{Title: titletdm.Title, Completed: completed}
+// 	// db.Save(&todo)
+// 	db.Save(&todo)
+// 	c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "message": "Todo item created successfully!", "resourceId": todo.ID, "fieldtitle": titletdm.Title})
+// }
 
-	if todo.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
-		return
-	}
+// // fetchSingleTodo fetch a single todo
+// func FetchSingleTodo(c *gin.Context) {
+// 	var todo MTD.TodoModel
+// 	todoID := c.Param("id")
 
-	completed := false
-	if todo.Completed == 1 {
-		completed = true
-	} else {
-		completed = false
-	}
+// 	db.First(&todo, todoID)
 
-	_todo := MTD.TransformedTodo{ID: todo.ID, Title: todo.Title, Completed: completed}
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _todo})
-}
+// 	if todo.ID == 0 {
+// 		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
+// 		return
+// 	}
 
-// updateTodo update a todo
-func UpdateTodo(c *gin.Context) {
-	var todo MTD.TodoModel
-	// var titletdm MTD.TodoModel
-	todoID := c.Param("id")
-	// firstname := c.Param("firstname")
+// 	completed := false
+// 	if todo.Completed == 1 {
+// 		completed = true
+// 	} else {
+// 		completed = false
+// 	}
 
-	db.First(&todo, todoID)
+// 	_todo := MTD.TransformedTodo{ID: todo.ID, Title: todo.Title, Completed: completed}
+// 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _todo})
+// }
 
-	if todo.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
-		return
-	}
-	c.BindJSON(&todo)
-	db.Model(&todo).Update("title", todo.Title)
-	completed, _ := strconv.Atoi(c.PostForm("completed"))
-	db.Model(&todo).Update("completed", completed)
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo updated successfully!", "tes": todo.Title})
-}
+// // updateTodo update a todo
+// func UpdateTodo(c *gin.Context) {
+// 	var todo MTD.TodoModel
+// 	// var titletdm MTD.TodoModel
+// 	todoID := c.Param("id")
+// 	// firstname := c.Param("firstname")
 
-// deleteTodo remove a todo
-func DeleteTodo(c *gin.Context) {
-	var todo MTD.TodoModel
-	todoID := c.Param("id")
+// 	db.First(&todo, todoID)
 
-	db.First(&todo, todoID)
+// 	if todo.ID == 0 {
+// 		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
+// 		return
+// 	}
+// 	c.BindJSON(&todo)
+// 	db.Model(&todo).Update("title", todo.Title)
+// 	completed, _ := strconv.Atoi(c.PostForm("completed"))
+// 	db.Model(&todo).Update("completed", completed)
+// 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo updated successfully!", "tes": todo.Title})
+// }
 
-	if todo.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
-		return
-	}
+// // deleteTodo remove a todo
+// func DeleteTodo(c *gin.Context) {
+// 	var todo MTD.TodoModel
+// 	todoID := c.Param("id")
 
-	db.Delete(&todo)
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo deleted successfully!"})
-}
+// 	db.First(&todo, todoID)
+
+// 	if todo.ID == 0 {
+// 		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
+// 		return
+// 	}
+
+// 	db.Delete(&todo)
+// 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo deleted successfully!"})
+// }
 
 // Login todo
-
 func LoginTodo(c *gin.Context) {
-	var todo MTD.TodoModel
-	var titletdm MTD.TodoModel
-	// todoID := c.Param("id")
-	// todotitle := c.Param("title")
-	c.BindJSON(&titletdm)
-	name := titletdm.Title
-	// name := c.PostForm("title")
-	// sqlStatement := `SELECT col FROM my_table WHERE id=$1`
-	// db.First(&todo, todotitle)
-	db.Where("title = ?", name).Find(&todo)
-
-	if titletdm.Title == todo.Title {
-		// if c.PostForm("title") == todo.Title {
-		// c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
-		c.JSON(http.StatusOK, gin.H{"statusaja": "sesuai"})
-		// c.JSON(http.StatusOK, todo.Title)
-		// c.Redirect("")
+	var db, err = connect()
+	if err != nil {
+		fmt.Println(err.Error())
 		return
-	} else {
-		// c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!", "tes": todo})
-		c.JSON(http.StatusOK, gin.H{"statusaja": "tidak sesuai"})
+	}
+	defer db.Close()
+
+	// var id = "BAF Lite"
+	// err = db.QueryRow("SELECT REF_APP_ID,REF_APP_NAME FROM REF_APP WHERE REF_APP_NAME= ?", id).Scan(&result.Ref_app_id, &result.Ref_app_name)
+	rows, err := db.Query("SELECT TOP 10 * FROM REF_APP")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	defer rows.Close()
+	var resultawal []MTD.AppRes
+	var _resultawal []MTD.AppResJSON
+	for rows.Next() {
+		var result = MTD.AppRes{}
+		err := rows.Scan(&result.Ref_app_id, &result.Ref_app_name, &result.Descr, &result.Url_apps, &result.Img_apps, &result.Isactive, &result.Deleted, &result.Usr_crt, &result.Dtm_crt, &result.Usr_upd, &result.Dtm_upd)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		// log.Println(result)
+
+		resultawal = append(resultawal, result)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println(err.Error())
 		return
 	}
 
-	// completed := false
-	// if todo.Completed == 1 {
-	// 	completed = true
-	// } else {
-	// 	completed = false
-	// }
+	for _, result := range resultawal {
+		// fmt.Println(result.Ref_app_name)
+		// c.JSON(http.StatusOK, gin.H{
+		// 	"status": http.StatusOK,
+		// 	"result": gin.H{
+		// 		"REF_APP_ID": result.Ref_app_id, "REF_APP_NAME": result.Ref_app_name}})
+		_resultawal = append(_resultawal, MTD.AppResJSON{Ref_app_id: result.Ref_app_id,
+			Ref_app_name: result.Ref_app_name, Descr: result.Descr,
+			Url_apps: result.Url_apps, Img_apps: result.Img_apps,
+			Isactive: result.Isactive, Deleted: result.Deleted,
+			Usr_crt: result.Usr_crt, Dtm_crt: result.Dtm_crt,
+			Usr_upd: result.Usr_upd, Dtm_upd: result.Dtm_upd})
+	}
 
-	// _todo := MTD.TransformedTodo{ID: todo.ID, Title: todo.Title}
-	// c.JSON(http.StatusOK, _todo)
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": _resultawal})
+
 }

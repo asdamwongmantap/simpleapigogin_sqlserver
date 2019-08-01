@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 
-	TD "simpleapigogin/Controllers"
+	TD "simpleapigogin_sqlserver/Controllers"
 
 	"github.com/rs/cors"
 )
@@ -17,7 +17,7 @@ func determineListenAddress() (string, error) {
 	port := os.Getenv("PORT")
 	if port == "" {
 		//return "", fmt.Errorf("$PORT not set")
-		port = "5001"
+		port = "5003"
 	}
 	return ":" + port, nil
 }
@@ -33,11 +33,11 @@ func main() {
 
 	v1 := router.Group("/api/v1/todos")
 	{
-		v1.POST("/", TD.CreateTodo)
-		v1.GET("/", TD.FetchAllTodo)
-		v1.GET("/:id", TD.FetchSingleTodo)
-		v1.PUT("/:id", TD.UpdateTodo)
-		v1.DELETE("/:id", TD.DeleteTodo)
+		// v1.POST("/", TD.CreateTodo)
+		// v1.GET("/", TD.FetchAllTodo)
+		// v1.GET("/:id", TD.FetchSingleTodo)
+		// v1.PUT("/:id", TD.UpdateTodo)
+		// v1.DELETE("/:id", TD.DeleteTodo)
 		v1.POST("/login", TD.LoginTodo)
 	}
 	c := cors.AllowAll()
