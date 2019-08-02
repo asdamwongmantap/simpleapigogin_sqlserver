@@ -38,7 +38,7 @@ func main() {
 		// v1.GET("/:id", TD.FetchSingleTodo)
 		// v1.PUT("/:id", TD.UpdateTodo)
 		// v1.DELETE("/:id", TD.DeleteTodo)
-		v1.POST("/login", TD.LoginTodo)
+		v1.POST("/login/:id", TD.LoginTodo)
 	}
 	c := cors.AllowAll()
 
