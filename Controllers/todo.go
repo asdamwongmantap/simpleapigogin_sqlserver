@@ -3,12 +3,19 @@ package todo
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
+	// "bytes"
+	// "encoding/json"
+	// "io/ioutil"
+	// "log"
+
+	// "strconv"
+
 	// "github.com/jinzhu/gorm"
+	// MTD "simpleapigogin_sqlserver/Model"
 	MTD "simpleapigogin_sqlserver/Model"
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -153,45 +160,120 @@ func LoginTodo(c *gin.Context) {
 
 	// var id = "BAF Lite"
 	// err = db.QueryRow("SELECT REF_APP_ID,REF_APP_NAME FROM REF_APP WHERE REF_APP_NAME= ?", id).Scan(&result.Ref_app_id, &result.Ref_app_name)
-	rows, err := db.Query("SELECT TOP 10 * FROM REF_APP")
+
+	// for get all data sql server
+	// rows, err := db.Query("SELECT TOP 10 * FROM REF_APP")
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// 	return
+	// }
+	// defer rows.Close()
+	// var resultawal []MTD.AppRes
+	// var _resultawal []MTD.AppResJSON
+	// for rows.Next() {
+	// 	var result = MTD.AppRes{}
+	// 	err := rows.Scan(&result.Ref_app_id, &result.Ref_app_name,
+	// &result.Descr, &result.Url_apps, &result.Img_apps,
+	// &result.Isactive, &result.Deleted, &result.Usr_crt,
+	// &result.Dtm_crt, &result.Usr_upd, &result.Dtm_upd)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 		return
+	// 	}
+	// 	// log.Println(result)
+
+	// 	resultawal = append(resultawal, result)
+	// }
+
+	// if err = rows.Err(); err != nil {
+	// 	fmt.Println(err.Error())
+	// 	return
+	// }
+
+	// for _, result := range resultawal {
+	// 	// fmt.Println(result.Ref_app_name)
+	// 	// c.JSON(http.StatusOK, gin.H{
+	// 	// 	"status": http.StatusOK,
+	// 	// 	"result": gin.H{
+	// 	// 		"REF_APP_ID": result.Ref_app_id, "REF_APP_NAME": result.Ref_app_name}})
+	// 	_resultawal = append(_resultawal, MTD.AppResJSON{Ref_app_id: result.Ref_app_id,
+	// 		Ref_app_name: result.Ref_app_name, Descr: result.Descr,
+	// 		Url_apps: result.Url_apps, Img_apps: result.Img_apps,
+	// 		Isactive: result.Isactive, Deleted: result.Deleted,
+	// 		Usr_crt: result.Usr_crt, Dtm_crt: result.Dtm_crt,
+	// 		Usr_upd: result.Usr_upd, Dtm_upd: result.Dtm_upd})
+	// }
+
+	// c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": _resultawal})
+
+	// for get some data sql server
+	// var result MTD.AppRes
+	// var refapp MTD.AppRes
+	// c.BindJSON(&refapp)
+	// var id = refapp.Ref_app_name
+	// err = db.QueryRow("SELECT * FROM REF_APP WHERE REF_APP_NAME= ?", id).
+	// 	Scan(&result.Ref_app_id, &result.Ref_app_name,
+	// 		&result.Descr, &result.Url_apps, &result.Img_apps,
+	// 		&result.Isactive, &result.Deleted, &result.Usr_crt,
+	// 		&result.Dtm_crt, &result.Usr_upd, &result.Dtm_upd)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// 	return
+	// }
+	// c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": result})
+
+	// // for post sql server
+	// var result MTD.AppRes
+	// c.BindJSON(&result)
+	// var RefAppName = result.Ref_app_name
+	// stmt, err := db.Prepare("INSERT INTO REF_APP (REF_APP_NAME) VALUES(?)")
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+
+	// insert, err := stmt.Exec(RefAppName)
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+
+	// if http.StatusOK == 200 {
+	// 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": "berhasil input", "hasil": insert})
+	// } else {
+	// 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": "gagal input"})
+	// }
+
+	// for put sql server
+	var result MTD.AppRes
+	// var refapp MTD.AppRes
+	// c.BindJSON(&refapp)
+	var id = c.Param("id")
+	err = db.QueryRow("SELECT * FROM REF_APP WHERE REF_APP_ID= ?", id).
+		Scan(&result.Ref_app_id, &result.Ref_app_name,
+			&result.Descr, &result.Url_apps, &result.Img_apps,
+			&result.Isactive, &result.Deleted, &result.Usr_crt,
+			&result.Dtm_crt, &result.Usr_upd, &result.Dtm_upd)
+
+	// c.BindJSON(&result)
+	var resultinsert MTD.AppRes
+	c.BindJSON(&resultinsert)
+	var RefAppName = resultinsert.Ref_app_name
+	// var RefAppID = result.Ref_app_id
+	// // var RefAppName = result.Ref_app_name
+	stmt, err := db.Prepare("UPDATE REF_APP SET REF_APP_NAME = ? WHERE REF_APP_ID= ?)")
 	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	defer rows.Close()
-	var resultawal []MTD.AppRes
-	var _resultawal []MTD.AppResJSON
-	for rows.Next() {
-		var result = MTD.AppRes{}
-		err := rows.Scan(&result.Ref_app_id, &result.Ref_app_name, &result.Descr, &result.Url_apps, &result.Img_apps, &result.Isactive, &result.Deleted, &result.Usr_crt, &result.Dtm_crt, &result.Usr_upd, &result.Dtm_upd)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		// log.Println(result)
-
-		resultawal = append(resultawal, result)
+		panic(err.Error())
 	}
 
-	if err = rows.Err(); err != nil {
-		fmt.Println(err.Error())
-		return
+	insert, err := stmt.Exec(RefAppName, id)
+	if err != nil {
+		panic(err.Error())
 	}
 
-	for _, result := range resultawal {
-		// fmt.Println(result.Ref_app_name)
-		// c.JSON(http.StatusOK, gin.H{
-		// 	"status": http.StatusOK,
-		// 	"result": gin.H{
-		// 		"REF_APP_ID": result.Ref_app_id, "REF_APP_NAME": result.Ref_app_name}})
-		_resultawal = append(_resultawal, MTD.AppResJSON{Ref_app_id: result.Ref_app_id,
-			Ref_app_name: result.Ref_app_name, Descr: result.Descr,
-			Url_apps: result.Url_apps, Img_apps: result.Img_apps,
-			Isactive: result.Isactive, Deleted: result.Deleted,
-			Usr_crt: result.Usr_crt, Dtm_crt: result.Dtm_crt,
-			Usr_upd: result.Usr_upd, Dtm_upd: result.Dtm_upd})
+	if http.StatusOK == 200 {
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": "berhasil update", "hasil": insert})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": "gagal update"})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": _resultawal})
-
+	// c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "name": RefAppName, "id": RefAppID})
 }

@@ -55,6 +55,9 @@ type (
 		Usr_upd      string `json:"USR_UPD"`
 		Dtm_upd      string `json:"DTM_UPD"`
 	}
+	SomeAppRes struct {
+		Refappname string
+	}
 )
 
 func UserIsValid(uName, pwd string) bool {
