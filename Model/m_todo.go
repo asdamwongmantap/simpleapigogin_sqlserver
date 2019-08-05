@@ -58,6 +58,16 @@ type (
 	SomeAppRes struct {
 		Refappname string
 	}
+	AppResLogin struct {
+		Username string
+		Password string
+		Fullname string
+	}
+	DataUser struct {
+		Username string
+		Password string
+		Fullname string
+	}
 )
 
 func UserIsValid(uName, pwd string) bool {
