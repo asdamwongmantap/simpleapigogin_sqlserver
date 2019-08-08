@@ -61,7 +61,8 @@ func FetchAllTodo(c *gin.Context) {
 		return
 	}
 	defer db.Close()
-	rows, err := db.Query("SELECT TOP 10 * FROM REF_APP")
+	// QueryRow("SELECT * FROM REF_APP WHERE REF_APP_NAME= ?", id).
+	rows, err := db.Query("SELECT TOP 10* FROM REF_APP ORDER BY DTM_CRT DESC")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -71,6 +72,7 @@ func FetchAllTodo(c *gin.Context) {
 	var _resultawal []MTD.AppResJSON
 	for rows.Next() {
 		var result = MTD.AppRes{}
+
 		err := rows.Scan(&result.Ref_app_id, &result.Ref_app_name,
 			&result.Descr, &result.Url_apps, &result.Img_apps,
 			&result.Isactive, &result.Deleted, &result.Usr_crt,
@@ -79,15 +81,16 @@ func FetchAllTodo(c *gin.Context) {
 			log.Fatal(err)
 			return
 		}
+
 		// log.Println(result)
 
 		resultawal = append(resultawal, result)
 	}
 
-	if err = rows.Err(); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	// if err = rows.Err(); err != nil {
+	// 	fmt.Println(err.Error())
+	// 	return
+	// }
 
 	for _, result := range resultawal {
 		_resultawal = append(_resultawal, MTD.AppResJSON{Ref_app_id: result.Ref_app_id,
@@ -109,20 +112,24 @@ func CreateTodo(c *gin.Context) {
 		return
 	}
 	defer db.Close()
-	var result MTD.DataUser
-	c.BindJSON(&result)
-	var username = result.Username
-	var password = result.Password
-	var fullname = result.Fullname
-	hasher := md5.New()
-	hasher.Write([]byte(password))
-	var passwordmd5 = hex.EncodeToString(hasher.Sum(nil))
-	stmt, err := db.Prepare("INSERT INTO USER_ACCESS (USERNAME,PASSWORD,FULLNAME) VALUES(?,?,?)")
+	var txt MTD.AppSP
+	c.BindJSON(&txt)
+	var Refappid = ""
+	var Refappname = txt.Ref_app_name
+	var Descr = txt.Descr
+	var Urlapps = txt.Url_apps
+	var Imgapps = txt.Img_apps
+	var Isactive = txt.Isactive
+	var Usrcrt = txt.Usr_crt
+	// hasher := md5.New()
+	// hasher.Write([]byte(password))
+	// var passwordmd5 = hex.EncodeToString(hasher.Sum(nil))
+	stmt, err := db.Prepare("EXEC SPINSERTUPDATEREFAPP ?,?,?,?,?,?,?")
 	if err != nil {
 		panic(err.Error())
 	}
 
-	insert, err := stmt.Exec(username, passwordmd5, fullname)
+	insert, err := stmt.Exec(Refappid, Refappname, Descr, Urlapps, Imgapps, Isactive, Usrcrt)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -134,64 +141,112 @@ func CreateTodo(c *gin.Context) {
 	}
 }
 
-// // fetchSingleTodo fetch a single todo
-// func FetchSingleTodo(c *gin.Context) {
-// 	var todo MTD.TodoModel
-// 	todoID := c.Param("id")
+// fetchSingleTodo fetch a single todo
+func FetchSingleTodo(c *gin.Context) {
+	var db, err = connect()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	defer db.Close()
+	// for get some data sql server
+	var result MTD.AppRes
+	// var refapp MTD.AppRes
+	// c.BindJSON(&refapp)
+	// var id = refapp.Ref_app_name
+	var id = c.Param("id")
+	err = db.QueryRow("SELECT * FROM REF_APP WHERE REF_APP_ID= ?", id).
+		Scan(&result.Ref_app_id, &result.Ref_app_name,
+			&result.Descr, &result.Url_apps, &result.Img_apps,
+			&result.Isactive, &result.Deleted, &result.Usr_crt,
+			&result.Dtm_crt, &result.Usr_upd, &result.Dtm_upd)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": result})
+}
 
-// 	db.First(&todo, todoID)
+// updateTodo update a todo
+func UpdateTodo(c *gin.Context) {
+	var db, err = connect()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	defer db.Close()
+	// for put sql server
+	var id = c.Param("id")
+	var result MTD.AppRes
+	// var resultinsert MTD.AppRes
+	// c.BindJSON(&resultinsert)
+	// var RefAppName = resultinsert.Ref_app_name
+	var txt MTD.AppSP
+	c.BindJSON(&txt)
+	var Refappid = id
+	var Refappname = txt.Ref_app_name
+	var Descr = txt.Descr
+	var Urlapps = txt.Url_apps
+	var Imgapps = txt.Img_apps
+	var Isactive = txt.Isactive
+	var Usrcrt = txt.Usr_crt
+	stmt, err := db.Prepare("EXEC SPINSERTUPDATEREFAPP ?,?,?,?,?,?,?")
+	if err != nil {
+		panic(err.Error())
+	}
 
-// 	if todo.ID == 0 {
-// 		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
-// 		return
-// 	}
+	insert, err := stmt.Exec(Refappid, Refappname, Descr, Urlapps, Imgapps, Isactive, Usrcrt)
+	if err != nil {
+		panic(err.Error())
+	}
+	err = db.QueryRow("SELECT * FROM REF_APP WHERE REF_APP_ID= ?", id).
+		Scan(&result.Ref_app_id, &result.Ref_app_name,
+			&result.Descr, &result.Url_apps, &result.Img_apps,
+			&result.Isactive, &result.Deleted, &result.Usr_crt,
+			&result.Dtm_crt, &result.Usr_upd, &result.Dtm_upd)
 
-// 	completed := false
-// 	if todo.Completed == 1 {
-// 		completed = true
-// 	} else {
-// 		completed = false
-// 	}
+	if http.StatusOK == 200 {
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": result, "ket": "berhasil update", "insres": insert})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "ket": "gagal update"})
+	}
+}
 
-// 	_todo := MTD.TransformedTodo{ID: todo.ID, Title: todo.Title, Completed: completed}
-// 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _todo})
-// }
+// deleteTodo remove a todo
+func DeleteTodo(c *gin.Context) {
+	var db, err = connect()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	defer db.Close()
+	// for put sql server
+	var id = c.Param("id")
+	var result MTD.AppRes
+	// var resultinsert MTD.AppRes
+	// c.BindJSON(&resultinsert)
+	// var RefAppName = resultinsert.Ref_app_name
+	stmt, err := db.Prepare("DELETE FROM REF_APP WHERE REF_APP_ID= ?")
+	if err != nil {
+		panic(err.Error())
+	}
 
-// // updateTodo update a todo
-// func UpdateTodo(c *gin.Context) {
-// 	var todo MTD.TodoModel
-// 	// var titletdm MTD.TodoModel
-// 	todoID := c.Param("id")
-// 	// firstname := c.Param("firstname")
+	insert, err := stmt.Exec(id)
+	if err != nil {
+		panic(err.Error())
+	}
+	err = db.QueryRow("SELECT * FROM REF_APP WHERE REF_APP_ID= ?", id).
+		Scan(&result.Ref_app_id, &result.Ref_app_name,
+			&result.Descr, &result.Url_apps, &result.Img_apps,
+			&result.Isactive, &result.Deleted, &result.Usr_crt,
+			&result.Dtm_crt, &result.Usr_upd, &result.Dtm_upd)
 
-// 	db.First(&todo, todoID)
-
-// 	if todo.ID == 0 {
-// 		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
-// 		return
-// 	}
-// 	c.BindJSON(&todo)
-// 	db.Model(&todo).Update("title", todo.Title)
-// 	completed, _ := strconv.Atoi(c.PostForm("completed"))
-// 	db.Model(&todo).Update("completed", completed)
-// 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo updated successfully!", "tes": todo.Title})
-// }
-
-// // deleteTodo remove a todo
-// func DeleteTodo(c *gin.Context) {
-// 	var todo MTD.TodoModel
-// 	todoID := c.Param("id")
-
-// 	db.First(&todo, todoID)
-
-// 	if todo.ID == 0 {
-// 		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No todo found!"})
-// 		return
-// 	}
-
-// 	db.Delete(&todo)
-// 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Todo deleted successfully!"})
-// }
+	if http.StatusOK == 200 {
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": result, "ket": "berhasil update", "insres": insert})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "result": "gagal update"})
+	}
+}
 
 // Login todo
 func LoginTodo(c *gin.Context) {

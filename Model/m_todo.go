@@ -3,6 +3,7 @@ package m_todo
 import (
 	// "encoding/json"
 
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
@@ -41,6 +42,20 @@ type (
 		Usr_upd      string
 		Dtm_upd      string
 	}
+	// AppRes struct {
+	// 	// Refappname string
+	// 	Ref_app_id   string
+	// 	Ref_app_name string
+	// 	Descr        string
+	// 	Url_apps     string
+	// 	Img_apps     sql.NullString
+	// 	Isactive     string
+	// 	Deleted      string
+	// 	Usr_crt      string
+	// 	Dtm_crt      string
+	// 	Usr_upd      string
+	// 	Dtm_upd      string
+	// }
 	AppResJSON struct {
 		// Refappname string
 		Ref_app_id   string `json:"REF_APP_ID"`
@@ -67,6 +82,16 @@ type (
 		Username string
 		Password string
 		Fullname string
+	}
+	AppSP struct {
+		// Refappname string
+		Ref_app_id   string
+		Ref_app_name string
+		Descr        string
+		Url_apps     string
+		Img_apps     string
+		Isactive     string
+		Usr_crt      string
 	}
 )
 
